@@ -2,11 +2,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
 // Rota de login
-router.post('/login', (req, res) => {
+router.post('/login', authMiddleware, (req, res) => {
   const { email, senha } = req.body;
   const sql = "SELECT * FROM usuarios WHERE email = ?";
   
