@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const config = require('./config/db');
 const reembolsoRoutes = require('./routes/reembolsoRoutes');
 const authRoutes = require('./routes/authRoutes');
 

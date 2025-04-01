@@ -7,7 +7,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 // Rota de login
-router.post('/login', authMiddleware, (req, res) => {
+router.post('/login', (req, res) => {
   const { email, senha } = req.body;
   const sql = "SELECT * FROM usuarios WHERE email = ?";
   
@@ -19,7 +19,7 @@ router.post('/login', authMiddleware, (req, res) => {
     const user = result[0];
     const senhaValida = await bcrypt.compare(senha, user.senha);
 
-    if (!senhaValida) return res.status(401).json({ message: "Senha incorreta" });
+    if (senha !== user.senha) return res.status(401).json({ message: "Senha incorreta" });
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '2h' });
     res.json({ token, nome: user.nome });
