@@ -1,0 +1,52 @@
+import express from 'express';
+import cors from 'cors';
+import { Mongo } from './database/mongo.js';
+import dotenv from 'dotenv';
+import { config } from 'dotenv'
+import authRouter from './auth/auth.js';
+import usersRouter from './routes/usersRouter.js';
+import platesRouter from './routes/platesRouter.js';
+import ordersRouter from './routes/ordersRouter.js';
+
+config()
+
+// Declaração da função
+async function main () {
+    const hostname = 'localhost';
+    const port = 3000;
+
+    // Construção da aplicação
+    const app = express();
+
+    const mongoConnection = await Mongo.connect({
+        mongoConnectionString: process.env.MONGO_CS, 
+        mongoDbName: process.env.MONGO_DB_NAME
+    })
+    console.log(mongoConnection)
+
+    // Arruma a resposta do servidor, quando enviado
+    app.use(express.json());
+    app.use(cors());
+
+    // Um pedido
+    app.get('/', (req, res) => {
+        res.send({
+            sucess: true,
+            statusCode: 200,
+            body: 'Welcome to Reembolso!'
+        })
+    })
+
+    // Routes
+    app.use('/auth', authRouter)
+    app.use('/users', usersRouter)
+    app.use('/plates', platesRouter)
+    app.use('/orders', ordersRouter)
+    
+    app.listen(port, () => {
+        console.log(`Server running on: http://${hostname}:${port}`)
+    })
+}
+
+// Faz a função rodar
+main ()
