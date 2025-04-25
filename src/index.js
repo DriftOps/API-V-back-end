@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import { Mongo } from './database/mongo.js';
+import dotenv from 'dotenv';
 import { config } from 'dotenv'
 import authRouter from './auth/auth.js';
 import usersRouter from './routes/usersRouter.js';
 import platesRouter from './routes/platesRouter.js';
 import ordersRouter from './routes/ordersRouter.js';
-import refundsRouter from './routes/refundsRouter.js';
 
 config()
 
@@ -42,7 +42,6 @@ async function main () {
     app.use('/users', usersRouter)
     app.use('/plates', platesRouter)
     app.use('/orders', ordersRouter)
-    app.use('/refunds', refundsRouter)
     
     app.listen(port, () => {
         console.log(`Server running on: http://${hostname}:${port}`)
