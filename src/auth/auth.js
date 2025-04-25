@@ -5,15 +5,18 @@ import crypto from 'crypto';
 import { Mongo } from '../database/mongo.js';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import cors from 'cors';
+
+
 
 const collectionName = 'users'
 
 
-passport.use (new LocalStrategy({ usernameField: 'email' }, async (email, password, callback) => {
+passport.use(new LocalStrategy({ usernameField: 'user' }, async (username, password, callback) => {
     const user = await Mongo.db
     .collection(collectionName)
     // findOne ({}) = ache um com os parâmetros nas chaves
-    .findOne ({ email: email })
+    .findOne({ user: username })
 
     // com "!" é caso não tenha o usuário
     if (!user) {
@@ -47,7 +50,7 @@ const authRouter = express.Router()
 authRouter.post('/signup', async (req, res) => {
     const checkUser = await Mongo.db
     .collection(collectionName)
-    .findOne({ email: req.body.email })
+    .findOne({ user: username })
 
     if(checkUser) {
         return res.status(500).send({
@@ -76,7 +79,7 @@ authRouter.post('/signup', async (req, res) => {
         .collection(collectionName)
         .insertOne({
             fullname: req.body.fullname,
-            email: req.body.email,
+            user: req.body.user,
             password: hashedPassword,
             salt // chave para criptografia
         })
@@ -89,22 +92,17 @@ authRouter.post('/signup', async (req, res) => {
             // Payload simples, apenas com os dados essenciais do usuário
             const payload = {
                 id: user._id,
-                email: user.email
+                user: req.body.user,
             }
 
             // Gerando o token JWT
             const token = jwt.sign(payload, 'secret', { expiresIn: '1h' })
 
-            return res.send({
-                sucess: true,
-                statusCode: 200,
-                body: {
-                    text: 'User registered correctly!',
-                    token,
-                    user: payload, // Só retornando o payload básico, não o objeto completo
-                    logged: true
-                }
-            })
+            return res.status(200).send({
+                token,
+                user,
+                message: "User logged in correctly"
+              })
         }
     })
 })

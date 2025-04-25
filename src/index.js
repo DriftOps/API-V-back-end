@@ -13,7 +13,7 @@ config()
 // Declaração da função
 async function main () {
     const hostname = 'localhost';
-    const port = 3000;
+    const port = 5000;
 
     // Construção da aplicação
     const app = express();
