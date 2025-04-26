@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { Mongo } from './database/mongo.js';
-import dotenv from 'dotenv';
 import { config } from 'dotenv'
 import authRouter from './auth/auth.js';
 import usersRouter from './routes/usersRouter.js';
