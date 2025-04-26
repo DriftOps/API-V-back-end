@@ -5,8 +5,7 @@ import dotenv from 'dotenv';
 import { config } from 'dotenv'
 import authRouter from './auth/auth.js';
 import usersRouter from './routes/usersRouter.js';
-import platesRouter from './routes/platesRouter.js';
-import ordersRouter from './routes/ordersRouter.js';
+import refundsRouter from './routes/refundsRouter.js';
 
 config()
 
@@ -40,8 +39,7 @@ async function main () {
     // Routes
     app.use('/auth', authRouter)
     app.use('/users', usersRouter)
-    app.use('/plates', platesRouter)
-    app.use('/orders', ordersRouter)
+    app.use('/refunds', refundsRouter)
     
     app.listen(port, () => {
         console.log(`Server running on: http://${hostname}:${port}`)

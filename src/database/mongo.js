@@ -6,7 +6,6 @@ export const Mongo = {
             const client = new MongoClient(mongoConnectionString, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
-                tls: true // Força uso do TLS
             });
 
             await client.connect();
