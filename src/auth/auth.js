@@ -10,10 +10,9 @@ const collectionName = 'users';
 
 // Configurando o Passport para procurar pelo "user" e senha
 passport.use(new LocalStrategy({ usernameField: 'user' }, async (user, password, callback) => {
-    // Procurando pelo campo "user", e não "username"
     const existingUser = await Mongo.db
         .collection(collectionName)
-        .findOne({ user: user });  // Alterado de "username" para "user"
+        .findOne({ user: user });
 
     if (!existingUser) {
         return callback(null, false, { message: 'User not found' });
