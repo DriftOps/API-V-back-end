@@ -5,6 +5,15 @@ import crypto from 'crypto'
 const collectionName = 'users'
 
 export default class UsersDataAccess {
+
+    async getUserById(userId) {
+        const user = await Mongo.db
+            .collection(collectionName)
+            .findOne({ _id: new ObjectId(userId) });
+    
+        return user;
+    }
+    
     async getUsers() {
         const result = await Mongo.db
         .collection(collectionName)
@@ -23,33 +32,20 @@ export default class UsersDataAccess {
     }
 
     async updateUser(userId, userData) {
-        if(userData.password) {
-            const salt = crypto.randomBytes(16)
+        if (userData.password) {
+            const salt = crypto.randomBytes(16);
+            const hashedPassword = await pbkdf2(userData.password, salt, 310000, 16, 'sha256');
+            userData = { ...userData, password: hashedPassword, salt };
+        }
     
-            crypto.pbkdf2(userData.password, salt, 310000, 16, 'sha256', async (error, hashedPassword) => {
-                if(error) {
-                    throw new Error('Error during hashing password')
-                }
-                userData = { ...userData, password: hashedPassword, salt }
-
-                const result = await Mongo.db
-                .collection(collectionName)
-                .findOneAndUpdate(
-                    { _id: new ObjectId(userId) },
-                    { $set: userData }
-                )
-        
-                return result
-            })
-        } else {
-            const result = await Mongo.db
+        const result = await Mongo.db
             .collection(collectionName)
             .findOneAndUpdate(
                 { _id: new ObjectId(userId) },
-                { $set: userData }
-            )
+                { $set: userData },
+                { returnDocument: 'after' } // opcional, retorna o novo documento
+            );
     
-            return result
-        }
+        return result;
     }
 }

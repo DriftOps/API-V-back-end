@@ -6,145 +6,156 @@ import { Mongo } from '../database/mongo.js';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 
-const collectionName = 'users'
+const collectionName = 'users';
 
+// Configurando o Passport para procurar pelo "user" e senha
+passport.use(new LocalStrategy({ usernameField: 'user' }, async (user, password, callback) => {
+    // Procurando pelo campo "user", e não "username"
+    const existingUser = await Mongo.db
+        .collection(collectionName)
+        .findOne({ user: user });  // Alterado de "username" para "user"
 
-passport.use (new LocalStrategy({ usernameField: 'email' }, async (email, password, callback) => {
-    const user = await Mongo.db
-    .collection(collectionName)
-    // findOne ({}) = ache um com os parâmetros nas chaves
-    .findOne ({ email: email })
-
-    // com "!" é caso não tenha o usuário
-    if (!user) {
-        return callback(null, false)
+    if (!existingUser) {
+        return callback(null, false, { message: 'User not found' });
     }
 
-    // campo p/ salvar junto com os dados da password criptada + a chave p/ descriptar
-    const saltBuffer = user.salt.buffer
+    // Recupera o salt armazenado no banco
+    const saltBuffer = existingUser.salt.buffer;
 
+    // Compara a senha enviada com a senha criptografada
     crypto.pbkdf2(password, saltBuffer, 310000, 16, 'sha256', (err, hashedPassword) => {
         if (err) {
-            return callback(err, false)
+            return callback(err, false);
         }
 
-        const userPasswordBuffer = Buffer.from(user.password.buffer)
+        const userPasswordBuffer = Buffer.from(existingUser.password.buffer);
 
-        // Caso as senhas não se equivalerem
-        if(!crypto.timingSafeEqual(userPasswordBuffer, hashedPassword)) {
-            return callback(null, false)
+        if (!crypto.timingSafeEqual(userPasswordBuffer, hashedPassword)) {
+            return callback(null, false, { message: 'Incorrect password' });
         }
 
-        const { password, salt, ...rest } = user
+        // Remover dados sensíveis antes de retornar o usuário
+        const { password, salt, ...rest } = existingUser;
 
-        return callback(null, rest)
-    })
-} ))
+        return callback(null, rest); // Retorna o usuário com dados filtrados
+    });
+}));
 
 // Rota
-const authRouter = express.Router()
+const authRouter = express.Router();
 
+// Rota de Signup (Cadastro)
 authRouter.post('/signup', async (req, res) => {
-    const checkUser = await Mongo.db
-    .collection(collectionName)
-    .findOne({ email: req.body.email })
+    const { user, password, fullname } = req.body;
 
-    if(checkUser) {
+    const checkUser = await Mongo.db
+        .collection(collectionName)
+        .findOne({ user }); // Alterado de "username" para "user"
+
+    if (checkUser) {
         return res.status(500).send({
-            sucess: false,
+            success: false,
             statusCode: 500,
             body: {
                 text: 'User already exists!'
             }
-        })
+        });
     }
-    // Caso contrário:
-    const salt = crypto.randomBytes(16)
-    crypto.pbkdf2(req.body.password, salt, 310000, 16, 'sha256', async (err, hashedPassword) => {
-        if(err) {
+
+    // Caso contrário, realiza o cadastro
+    const salt = crypto.randomBytes(16);
+    crypto.pbkdf2(password, salt, 310000, 16, 'sha256', async (err, hashedPassword) => {
+        if (err) {
             return res.status(500).send({
-                sucess: false,
+                success: false,
                 statusCode: 500,
                 body: {
                     text: 'Error on crypto password!',
                     err: err
                 }
-            })
+            });
         }
 
         const result = await Mongo.db
-        .collection(collectionName)
-        .insertOne({
-            fullname: req.body.fullname,
-            email: req.body.email,
-            password: hashedPassword,
-            salt // chave para criptografia
-        })
+            .collection(collectionName)
+            .insertOne({
+                fullname,
+                user, // Alterado de "username" para "user"
+                password: hashedPassword,
+                salt // Salvo junto com a senha criptografada
+            });
 
         if (result.insertedId) {
-            const user = await Mongo.db
+            const registeredUser = await Mongo.db
                 .collection(collectionName)
-                .findOne({ _id: new ObjectId(result.insertedId) })
-        
-            // Payload simples, apenas com os dados essenciais do usuário
-            const payload = {
-                id: user._id,
-                email: user.email
-            }
+                .findOne({ _id: new ObjectId(result.insertedId) });
 
-            // Gerando o token JWT
-            const token = jwt.sign(payload, 'secret', { expiresIn: '1h' })
+            const payload = {
+                id: registeredUser._id,
+                user: registeredUser.user // Alterado de "username" para "user"
+            };
+
+            const token = jwt.sign(payload, 'secret', { expiresIn: '1h' });
 
             return res.send({
-                sucess: true,
+                success: true,
                 statusCode: 200,
                 body: {
                     text: 'User registered correctly!',
                     token,
-                    user: payload, // Só retornando o payload básico, não o objeto completo
+                    user: payload,
                     logged: true
                 }
-            })
+            });
         }
-    })
-})
+    });
+});
 
+// Rota de Login
 authRouter.post('/login', (req, res) => {
-    passport.authenticate('local',(error, user) => {
-        if(error) {
+    passport.authenticate('local', (error, user, info) => {
+        if (error) {
             return res.status(500).send({
-                sucess: false,
+                success: false,
                 statusCode: 500,
                 body: {
                     text: "Error during authentication",
                     error
                 }
-            })
+            });
         }
 
-        if(!user) {
+        if (!user) {
             return res.status(400).send({
-                sucess: false,
+                success: false,
                 statusCode: 400,
                 body: {
-                    text: "User not found",
+                    text: info.message || "User not found",
                     error
                 }
-            })
+            });
         }
 
-        const token = jwt.sign(user, 'secret')
-        console.log(user)
-            return res.status(200).send({
-                sucess: true,
-                statusCode: 200,
-                body: {
-                    text: "User logged in correctly",
-                    user,
-                    token
-                }
-            })
-    })(req, res);
-})
+        // Payload do usuário
+        const userPayload = {
+            id: user._id, // ID do usuário
+            user: user.user, // Nome de usuário
+            fullName: user.fullname // Nome completo
+        };
 
-export default authRouter
+        // Gerando o token JWT
+        const token = jwt.sign(userPayload, 'secret', { expiresIn: '1h' });
+
+        return res.status(200).send({
+            success: true,
+            statusCode: 200,
+            body: {
+                text: "User logged in correctly",
+                user: userPayload,
+                token
+            }
+        });
+    })(req, res);
+});
+
+export default authRouter;

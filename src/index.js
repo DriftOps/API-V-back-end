@@ -1,49 +1,46 @@
+import { config } from 'dotenv';
+config();
+
 import express from 'express';
 import cors from 'cors';
 import { Mongo } from './database/mongo.js';
-import { config } from 'dotenv'
 import authRouter from './auth/auth.js';
 import usersRouter from './routes/usersRouter.js';
 import refundsRouter from './routes/refundsRouter.js';
 
-config()
+async function main() {
+  const hostname = '0.0.0.0';
+  const port = 3000;
 
-// Declaração da função
-async function main () {
-    const hostname = 'localhost';
-    const port = 3000;
+  const app = express();
 
-    // Construção da aplicação
-    const app = express();
+  const mongoConnection = await Mongo.connect({
+    mongoConnectionString: process.env.MONGO_CS,
+    mongoDbName: process.env.MONGO_DB_NAME
+  });
+  console.log('Mongo conectado:', mongoConnection);
 
-    const mongoConnection = await Mongo.connect({
-        mongoConnectionString: process.env.MONGO_CS, 
-        mongoDbName: process.env.MONGO_DB_NAME
-    })
-    console.log(mongoConnection)
+  app.use(express.json());
+  app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
 
-    // Arruma a resposta do servidor, quando enviado
-    app.use(express.json());
-    app.use(cors());
+  app.get('/', (req, res) => {
+    res.send({
+      success: true,
+      statusCode: 200,
+      body: 'Welcome to Reembolso!'
+    });
+  });
 
-    // Um pedido
-    app.get('/', (req, res) => {
-        res.send({
-            sucess: true,
-            statusCode: 200,
-            body: 'Welcome to Reembolso!'
-        })
-    })
+  app.use('/auth', authRouter);
+  app.use('/users', usersRouter);
+  app.use('/refunds', refundsRouter);
 
-    // Routes
-    app.use('/auth', authRouter)
-    app.use('/users', usersRouter)
-    app.use('/refunds', refundsRouter)
-    
-    app.listen(port, () => {
-        console.log(`Server running on: http://${hostname}:${port}`)
-    })
+  app.listen(port, hostname, () => {
+    console.log(`Server running on: http://${hostname}:${port}`);
+  });  
 }
 
-// Faz a função rodar
-main ()
+main().catch((err) => {
+  console.log('CS:', process.env.MONGO_CS);
+  console.error('Erro ao iniciar o servidor:', err);
+});
