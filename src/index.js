@@ -7,6 +7,7 @@ import { Mongo } from './database/mongo.js';
 import authRouter from './auth/auth.js';
 import usersRouter from './routes/usersRouter.js';
 import refundsRouter from './routes/refundsRouter.js';
+import projectsRouter from './routes/projectsRouter.js';
 
 async function main() {
   const hostname = '0.0.0.0';
@@ -34,6 +35,7 @@ async function main() {
   app.use('/auth', authRouter);
   app.use('/users', usersRouter);
   app.use('/refunds', refundsRouter);
+  app.use('/projects', projectsRouter);
 
   app.listen(port, hostname, () => {
     console.log(`Server running on: http://${hostname}:${port}`);
