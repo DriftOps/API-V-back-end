@@ -15,7 +15,7 @@ passport.use(new LocalStrategy({ usernameField: 'user' }, async (user, password,
         .findOne({ user: user });
 
     if (!existingUser) {
-        return callback(null, false, { message: 'User not found' });
+        return callback(null, false, { message: 'Usuário/senha incorreto!' });
     }
 
     // Recupera o salt armazenado no banco
@@ -30,7 +30,7 @@ passport.use(new LocalStrategy({ usernameField: 'user' }, async (user, password,
         const userPasswordBuffer = Buffer.from(existingUser.password.buffer);
 
         if (!crypto.timingSafeEqual(userPasswordBuffer, hashedPassword)) {
-            return callback(null, false, { message: 'Incorrect password' });
+            return callback(null, false, { message: 'Usuário/senha incorreto!' });
         }
 
         // Remover dados sensíveis antes de retornar o usuário
@@ -129,7 +129,7 @@ authRouter.post('/login', (req, res) => {
                 success: false,
                 statusCode: 400,
                 body: {
-                    text: info.message || "User not found",
+                    text: info.message || "Usuário/senha incorreto!",
                     error
                 }
             });

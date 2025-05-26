@@ -6,6 +6,20 @@ const collectionName = 'users'
 
 export default class UsersDataAccess {
 
+    async createUser(userData) {
+    const userToInsert = {
+        ...userData,
+        dataRegistro: new Date(), // Insere a data atual automaticamente
+    };
+
+    const result = await Mongo.db
+        .collection(collectionName)
+        .insertOne(userToInsert);
+
+        return { _id: result.insertedId, ...userToInsert };
+    }
+
+
     async getUserById(userId) {
         const user = await Mongo.db
             .collection(collectionName)

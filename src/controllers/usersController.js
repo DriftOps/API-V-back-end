@@ -6,6 +6,26 @@ export default class UsersControllers {
         this.dataAccess = new UsersDataAccess();
     }
 
+    async createUser(userData) {
+        try {
+            const newUser = await this.dataAccess.createUser(userData);
+            return ok(newUser);
+        } catch (error) {
+            return serverError(error);
+        }
+    }
+
+    async getUserById(userId) {
+        // valida se userId é um ObjectId válido
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return null; // ou lançar erro, depende da sua escolha
+        }
+
+        const user = await User.findById(userId).exec();
+        return user;
+    }
+
+
     async getUsers() {
         try {
             const users = await this.dataAccess.getUsers();
