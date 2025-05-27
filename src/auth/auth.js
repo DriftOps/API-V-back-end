@@ -49,7 +49,7 @@ authRouter.post('/signup', async (req, res) => {
 
     const checkUser = await Mongo.db
         .collection(collectionName)
-        .findOne({ user }); // Alterado de "username" para "user"
+        .findOne({ user });
 
     if (checkUser) {
         return res.status(500).send({

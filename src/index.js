@@ -10,7 +10,7 @@ import refundsRouter from './routes/refundsRouter.js';
 import projectsRouter from './routes/projectsRouter.js';
 
 async function main() {
-  const hostname = 'localhost'; // TROQUE PELO IP DA SUA MÁQUINA!
+  const hostname = '0.0.0.0'; // TROQUE PELO IP DA SUA MÁQUINA!
   const port = 3000;
 
   const app = express();
@@ -22,7 +22,11 @@ async function main() {
   console.log('Mongo conectado:', mongoConnection);
 
   app.use(express.json());
-  app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
+  app.use(cors({
+    origin: '*',  // Durante desenvolvimento: permite qualquer origem
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Permite envio de JSON e tokens
+  }));
 
   app.get('/', (req, res) => {
     res.send({
