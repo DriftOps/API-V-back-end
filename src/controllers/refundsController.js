@@ -42,6 +42,27 @@ export default class RefundsController {
         }
     }
 
+    
+    async updateStatus(refundId, status) {
+    try {
+        const result = await this.dataAccess.updateRefund(refundId, { status });
+        if (!result.value) {
+            return {
+                body: { text: 'Reembolso não encontrado' },
+                statusCode: 404,
+                success: false
+            };
+        }
+        return {
+            body: { text: 'Status atualizado com sucesso' },
+            statusCode: 200,
+            success: true
+        };
+    } catch (error) {
+        return serverError(error);
+    }
+}
+
     async updateRefund(refundId, refundData) {
         try {
             const result = await this.dataAccess.updateRefund(refundId, refundData)

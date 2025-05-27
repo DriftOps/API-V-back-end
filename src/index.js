@@ -10,7 +10,7 @@ import refundsRouter from './routes/refundsRouter.js';
 import projectsRouter from './routes/projectsRouter.js';
 
 async function main() {
-  const hostname = '0.0.0.0'; // TROQUE PELO IP DA SUA MÁQUINA!
+  const hostname = '172.27.208.1'; // TROQUE PELO IP DA SUA MÁQUINA!
   const port = 3000;
 
   const app = express();
